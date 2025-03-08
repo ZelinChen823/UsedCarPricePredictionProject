@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prediction Result</title>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('https://th.bing.com/th/id/R.2e199beab95ce4b5ead39eca56829fe5?rik=gI9e4DMkawqwZg&riu=http%3a%2f%2fd279m997dpfwgl.cloudfront.net%2fwp%2f2018%2f08%2f0807_used-car.jpg%3fs%3d6&ehk=U%2bIsEwDtfWB4%2fM50fwwrAp8CTm0ebqeBGaXs%2f7n3MLw%3d&risl=&pid=ImgRaw&r=0');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .dashboard-item {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Your Prediction</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <!-- Prediction -->
+                            <div class="col-md-6">
+                                <h4 class="text-center">Predicted Price</h4>
+                                <p class="display-6 text-center text-primary">${{ prediction }}</p>
+                                <p class="text-muted text-center">Based on the details provided.</p>
+                            </div>
+                        </div>
+
+                        <!-- What-If Section -->
+                        <hr>
+                        <h6 class="mt-4">What-If Analysis</h6>
+                        <p class="text-muted">Adjust the highway MPG to see how it affects the price:</p>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="highway_mpg_adjust" class="form-label"><i class="fas fa-road me-2"></i>Highway MPG</label>
+                                <input type="number" id="highway_mpg_adjust" name="highway_mpg" class="form-control"
+                                       value="{{ input_data['highway_mpg'] }}" min="10" max="50">
+                            </div>
+                        </div>
+                        <p>Updated Prediction: <span id="updated_prediction">${{ prediction }}</span></p>
+
+                        <!-- Dashboard -->
+                        <hr>
+                        <h6 class="mt-4">Price Context</h6>
+                        <div class="row text-center">
+                            <div class="col-md-4 dashboard-item">
+                                <p class="mb-1"><strong>Low Range</strong></p>
+                                <p>${{ (prediction|int * 0.9)|round(2) }}</p>
+                            </div>
+                            <div class="col-md-4 dashboard-item bg-light">
+                                <p class="mb-1"><strong>Your Prediction</strong></p>
+                                <p>${{ prediction }}</p>
+                            </div>
+                            <div class="col-md-4 dashboard-item">
+                                <p class="mb-1"><strong>High Range</strong></p>
+                                <p>${{ (prediction|int * 1.1)|round(2) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Back Button -->
+                        <div class="text-center mt-4">
+                            <a href="/" class="btn btn-primary">Predict Another Car</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- What-If -->
+    <script>
+        // Store original data
+        var originalData = {{ input_data | tojson }};
+
+        document.getElementById("highway_mpg_adjust").addEventListener("input", function() {
+            var updatedData = { ...originalData };
+            updatedData['highway_mpg'] = this.value;
+            // Send data
+            fetch('/predict_update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update the prediction
+                document.getElementById("updated_prediction").innerText = "$" + data.prediction;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
