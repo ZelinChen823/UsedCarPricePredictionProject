@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
@@ -45,6 +46,16 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # Train the model
 pipeline.fit(X_train, y_train)
+
+X_train_transformed = pipeline.named_steps['preprocess'].transform(X_train)
+y_train_pred = pipeline.named_steps['model'].predict(X_train_transformed)
+residuals = np.abs(y_train - y_train_pred)
+
+# Save training transformed data and residuals for later use
+training_info = {
+    'X_train_transformed': X_train_transformed,
+    'residuals': residuals,
+}
 
 # Model saved by using joblib
 joblib.dump(pipeline, 'model.joblib')
