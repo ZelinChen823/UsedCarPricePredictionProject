@@ -52,6 +52,18 @@
                                 <select id="feature_to_vary" class="form-select">
                                     <option value="year">Year</option>
                                     <option value="highway_mpg">Highway MPG</option>
+                                    <option value="city_mpg">City MPG</option>
+                                    <option value="engine_hp">Engine HP</option>
+                                    <option value="engine_cylinders">Engine Cylinders</option>
+                                    <option value="number_of_doors">Number of Doors</option>
+                                    <option value="popularity">Popularity</option>
+                                    <option value="make">Make</option>
+                                    <option value="engine_fuel_type">Engine Fuel Type</option>
+                                    <option value="transmission_type">Transmission Type</option>
+                                    <option value="driven_wheels">Driven Wheels</option>
+                                    <option value="market_category">Market Category</option>
+                                    <option value="vehicle_size">Vehicle Size</option>
+                                    <option value="vehicle_style">Vehicle Style</option>
                                 </select>
                             </div>
                         </div>
@@ -141,13 +153,17 @@
             var labels = data.map(item => item.value);
             var predictions = data.map(item => item.prediction);
 
+            // Determine chart type: use 'bar' for categorical features and 'line' for numerical.
+            var categoricalFeatures = ['make', 'engine_fuel_type', 'transmission_type', 'driven_wheels', 'market_category', 'vehicle_size', 'vehicle_style'];
+            var chartType = categoricalFeatures.includes(featureToVary) ? 'bar' : 'line';
+
             if (window.trendChart) {
                 window.trendChart.destroy();
             }
 
             var ctx = document.getElementById('trend_chart').getContext('2d');
             window.trendChart = new Chart(ctx, {
-                type: 'line',
+                type: chartType,
                 data: {
                     labels: labels,
                     datasets: [{
@@ -184,7 +200,7 @@
         })
         .catch(error => console.error('Error:', error));
     });
-</script>
+    </script>
 
 
     <!-- Bootstrap -->

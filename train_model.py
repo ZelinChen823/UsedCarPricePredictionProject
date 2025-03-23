@@ -46,15 +46,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Train the model
 pipeline.fit(X_train, y_train)
 
-# Evaluate the model using RMSE (for test)
-'''
-from sklearn.metrics import mean_squared_error
-import numpy as np
-y_pred = pipeline.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-rmse = np.sqrt(mse)
-print(f"RMSE: {rmse}")
-'''
 # Model saved by using joblib
 joblib.dump(pipeline, 'model.joblib')
 print("Model and unique values saved successfully.")

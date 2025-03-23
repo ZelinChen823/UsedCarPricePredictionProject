@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import joblib
 import json
-import train_model
 
 app = Flask(__name__)
 
@@ -11,6 +10,7 @@ app = Flask(__name__)
 model = joblib.load('model.joblib')
 with open('unique_values.json', 'r') as f:
     unique_values = json.load(f)
+
 numerical_columns = ['year', 'engine_hp', 'engine_cylinders', 'number_of_doors',
                      'highway_mpg', 'city_mpg', 'popularity']
 
@@ -23,16 +23,12 @@ def predict():
     # Get form data
     data = request.form.to_dict()
     input_df = pd.DataFrame([data])
-
     # Convert numerical columns to numeric types
     for col in numerical_columns:
         input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
-
     # Make prediction
     prediction = model.predict(input_df)[0]
     prediction_formatted = f"{prediction:,.0f}"
-
-    # Return prediction and original input data to result.html
     return render_template('result.html', prediction=prediction_formatted, input_data=data)
 
 @app.route('/predict_update', methods=['POST'])
