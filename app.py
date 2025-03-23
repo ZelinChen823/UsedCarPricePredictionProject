@@ -23,15 +23,6 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     # Get form data
-    '''data = request.form.to_dict()
-    input_df = pd.DataFrame([data])
-    # Convert numerical columns to numeric types
-    for col in numerical_columns:
-        input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
-    # Make prediction
-    prediction = model.predict(input_df)[0]
-    prediction_formatted = f"{prediction:,.0f}"
-    return render_template('result.html', prediction=prediction_formatted, input_data=data)'''
     data = request.form.to_dict()
     input_df = pd.DataFrame([data])
     # Convert numerical columns to numeric types
@@ -41,21 +32,16 @@ def predict():
     # Make prediction
     prediction = model.predict(input_df)[0]
 
-    # Transform input data using the same preprocessor from your pipeline
     input_transformed = model.named_steps['preprocess'].transform(input_df)
 
-    # Compute Euclidean distances to all training instances
     distances = cdist(input_transformed, training_info['X_train_transformed'], metric='euclidean')[0]
 
-    # Select k nearest neighbors (e.g., k=5)
     k = 5
     nearest_indices = distances.argsort()[:k]
     mean_error = np.mean(training_info['residuals'][nearest_indices])
 
-    # Calculate a simple confidence score: higher mean error -> lower confidence
-    confidence_score = max(0, 1 - (mean_error / prediction)) * 100  # as a percentage
+    confidence_score = max(0, 1 - (mean_error / prediction)) * 100
 
-    # Format predictions and confidence for display
     prediction_formatted = f"{prediction:,.0f}"
     confidence_formatted = f"{confidence_score:.1f}%"
 
