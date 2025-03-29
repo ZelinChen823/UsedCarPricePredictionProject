@@ -5,20 +5,45 @@ import joblib
 import json
 from scipy.spatial.distance import cdist
 from train_model import training_info
+import json
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 
 # Import the trained model
-model = joblib.load('model.joblib')
+model = joblib.load('enhanced_model.joblib')
 with open('unique_values.json', 'r') as f:
     unique_values = json.load(f)
 
 numerical_columns = ['year', 'engine_hp', 'engine_cylinders', 'number_of_doors',
                      'highway_mpg', 'city_mpg', 'popularity']
 
+HISTORY_FILE = 'search_history.json'
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, 'r') as f:
+            try:
+                history = json.load(f)
+            except json.JSONDecodeError:
+                history = []
+    else:
+        history = []
+    return history
+
+def save_history(history):
+    with open(HISTORY_FILE, 'w') as f:
+        json.dump(history, f, indent=4)
 @app.route('/', methods=['GET'])
 def home():
     return render_template('index.html', unique_values=unique_values)
+
+@app.route('/history', methods=['GET'])
+def history():
+    # Load the saved history from file and pass it to the template
+    history = load_history()
+    return render_template('history.html', history=history)
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -30,7 +55,7 @@ def predict():
         input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
 
     # Make prediction
-    prediction = model.predict(input_df)[0]
+    prediction = np.exp(model.predict(input_df)[0])
 
     input_transformed = model.named_steps['preprocess'].transform(input_df)
 
@@ -44,6 +69,15 @@ def predict():
 
     prediction_formatted = f"{prediction:,.0f}"
     confidence_formatted = f"{confidence_score:.1f}%"
+
+    history = load_history()
+    history_item = {
+        'input_data': data,
+        'prediction': prediction_formatted,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    history.append(history_item)
+    save_history(history)
 
     return render_template('result.html', prediction=prediction_formatted, input_data=data,
                            confidence=confidence_formatted)
@@ -60,7 +94,7 @@ def predict_update():
         input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
 
     # Make new prediction
-    prediction = model.predict(input_df)[0]
+    prediction = np.exp(model.predict(input_df)[0])
     prediction_formatted = f"{prediction:,.0f}"
 
     # Return the new prediction as JSON
