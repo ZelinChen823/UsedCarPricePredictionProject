@@ -58,7 +58,7 @@
                                     <option value="engine_cylinders">Engine Cylinders</option>
                                     <option value="number_of_doors">Number of Doors</option>
                                     <option value="popularity">Popularity</option>
-                                    <option value="make">Make</option>
+                                    <option value="model">Model</option>
                                     <option value="engine_fuel_type">Engine Fuel Type</option>
                                     <option value="transmission_type">Transmission Type</option>
                                     <option value="driven_wheels">Driven Wheels</option>
@@ -76,13 +76,33 @@
                         <!-- What-If Section -->
                         <hr>
                         <h6 class="mt-4">What-If Analysis</h6>
-                        <p class="text-muted">Adjust the highway MPG to see how it affects the price:</p>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="highway_mpg_adjust" class="form-label"><i class="fas fa-road me-2"></i>Highway MPG</label>
-                                <input type="number" id="highway_mpg_adjust" name="highway_mpg" class="form-control"
-                                       value="{{ input_data['highway_mpg'] }}" min="10" max="50">
-                            </div>
+                        <p class="text-muted">Adjust the numerical values below to see how they affect the price:</p>
+                        <div class="row mb-3" id="whatif-inputs">
+                          <!-- Year -->
+                          <div class="col-md-4 mb-2">
+                            <label for="whatif-year" class="form-label"><i class="fas fa-calendar-alt me-2"></i>Year</label>
+                            <input type="number" id="whatif-year" class="form-control" min="1900" max="2025" value="{{ input_data['year'] }}">
+                          </div>
+                          <!-- Highway MPG -->
+                          <div class="col-md-4 mb-2">
+                            <label for="whatif-highway_mpg" class="form-label"><i class="fas fa-road me-2"></i>Highway MPG</label>
+                            <input type="number" id="whatif-highway_mpg" class="form-control" min="10" max="50" value="{{ input_data['highway_mpg'] }}">
+                          </div>
+                          <!-- City MPG -->
+                          <div class="col-md-4 mb-2">
+                            <label for="whatif-city_mpg" class="form-label"><i class="fas fa-city me-2"></i>City MPG</label>
+                            <input type="number" id="whatif-city_mpg" class="form-control" min="5" max="40" value="{{ input_data['city_mpg'] }}">
+                          </div>
+                          <!-- Engine HP -->
+                          <div class="col-md-4 mb-2">
+                            <label for="whatif-engine_hp" class="form-label"><i class="fas fa-tachometer-alt me-2"></i>Engine HP</label>
+                            <input type="number" id="whatif-engine_hp" class="form-control" min="50" max="1000" value="{{ input_data['engine_hp'] }}">
+                          </div>
+                          <!-- Engine Cylinders -->
+                          <div class="col-md-4 mb-2">
+                            <label for="whatif-engine_cylinders" class="form-label"><i class="fas fa-cogs me-2"></i>Cylinders</label>
+                            <input type="number" id="whatif-engine_cylinders" class="form-control" min="2" max="16" value="{{ input_data['engine_cylinders'] }}">
+                          </div>
                         </div>
                         <p>Updated Prediction: <span id="updated_prediction">${{ prediction }}</span></p>
 
@@ -96,15 +116,13 @@
                             </div>
                             <div class="col-md-4 dashboard-item bg-light">
                                 <p class="mb-1"><strong>Your Prediction</strong></p>
-                                <p>${{ prediction }}</p>
+                                <p>${{ prediction_formatted }}</p>
                             </div>
                             <div class="col-md-4 dashboard-item">
                                 <p class="mb-1"><strong>High Range</strong></p>
                                 <p>${{ (prediction|int * 1.1)|round(2) }}</p>
                             </div>
                         </div>
-
-
 
                         <!-- Back Button -->
                         <div class="text-center mt-4">
@@ -116,27 +134,49 @@
         </div>
     </div>
 
-    <!-- What-If -->
-    <script>
-        // Store original data
-        var originalData = {{ input_data | tojson }};
 
-        document.getElementById("highway_mpg_adjust").addEventListener("input", function() {
-            var updatedData = { ...originalData };
-            updatedData['highway_mpg'] = this.value;
-            // Send data
-            fetch('/predict_update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Update the prediction
-                document.getElementById("updated_prediction").innerText = "$" + data.prediction;
-            })
-            .catch(error => console.error('Error:', error));
+    <script>
+      // List of numerical features to watch
+      const numericalFeatures = [
+        'year', 'highway_mpg', 'city_mpg',
+        'engine_hp', 'engine_cylinders'
+      ];
+
+      // Store the original input data
+      const originalData = {{ input_data | tojson }};
+
+      // Function to send updated values and refresh prediction
+      function updatePrediction() {
+        // Clone and update only numerical fields
+        const updatedData = { ...originalData };
+        numericalFeatures.forEach(feature => {
+          const el = document.getElementById(`whatif-${feature}`);
+          if (el) {
+            updatedData[feature] = parseFloat(el.value);
+          }
         });
+
+        // Send updated data to server
+        fetch('/predict_update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedData)
+        })
+        .then(res => res.json())
+        .then(data => {
+          // Update the displayed prediction
+          document.getElementById('updated_prediction').innerText = `$${data.prediction}`;
+        })
+        .catch(err => console.error('What-If Error:', err));
+      }
+
+      // Attach input listeners to all numerical fields
+      numericalFeatures.forEach(feature => {
+        const el = document.getElementById(`whatif-${feature}`);
+        if (el) {
+          el.addEventListener('input', updatePrediction);
+        }
+      });
     </script>
 
     <script>

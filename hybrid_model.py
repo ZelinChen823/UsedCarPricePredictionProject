@@ -104,6 +104,7 @@ stacking_model = LinearRegression()
 stacking_model.fit(stacked_features, y_test_log)
 ensemble_predictions_log = stacking_model.predict(stacked_features)
 
+
 ensemble_rmse = np.sqrt(mean_squared_error(y_test_log, ensemble_predictions_log))
 ensemble_mae = mean_absolute_error(y_test_log, ensemble_predictions_log)
 ensemble_r2 = r2_score(y_test_log, ensemble_predictions_log)

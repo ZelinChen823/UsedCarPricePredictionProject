@@ -55,6 +55,8 @@ def predict():
         input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
 
     # Make prediction
+    raw_prediction = np.exp(model.predict(input_df)[0])
+
     prediction = np.exp(model.predict(input_df)[0])
 
     input_transformed = model.named_steps['preprocess'].transform(input_df)
@@ -63,7 +65,8 @@ def predict():
 
     k = 5
     nearest_indices = distances.argsort()[:k]
-    mean_error = np.mean(training_info['residuals'][nearest_indices])
+    mean_error = training_info['residuals'].iloc[nearest_indices].mean()
+
 
     confidence_score = max(0, 1 - (mean_error / prediction)) * 100
 
@@ -79,8 +82,8 @@ def predict():
     history.append(history_item)
     save_history(history)
 
-    return render_template('result.html', prediction=prediction_formatted, input_data=data,
-                           confidence=confidence_formatted)
+    return render_template('result.html', prediction=raw_prediction, prediction_formatted=prediction_formatted,
+                           input_data=data, confidence=confidence_formatted)
 
 @app.route('/predict_update', methods=['POST'])
 def predict_update():
@@ -116,25 +119,38 @@ def trend():
         'popularity': (0, 10000)
     }
 
+    trend_data = []
+
+    # Check if the feature is numerical
     if feature_to_vary in feature_ranges:
         min_val, max_val = feature_ranges[feature_to_vary]
         if feature_to_vary == 'year':
             values = list(range(min_val, max_val + 1))
         else:
             values = np.linspace(min_val, max_val, 10).tolist()
+    elif feature_to_vary == 'model':
+        df = pd.read_csv('Data/data.csv', encoding='ISO-8859-1')
+        # Filter models based on the make provided in input_data
+        if 'make' in input_data and input_data['make']:
+            filtered_df = df[df['make'] == input_data['make']]
+        else:
+            filtered_df = df
+        values = sorted(filtered_df['model'].dropna().unique().tolist())
+    elif feature_to_vary in unique_values:
+        values = unique_values[feature_to_vary]
     else:
         return jsonify({'error': 'Feature not supported for trend analysis'}), 400
 
-    trend_data = []
     for val in values:
         updated_data = input_data.copy()
         updated_data[feature_to_vary] = val
         input_df = pd.DataFrame([updated_data])
 
+        # Convert numerical columns to numeric types
         for col in numerical_columns:
             input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
 
-        prediction = model.predict(input_df)[0]
+        prediction = np.exp(model.predict(input_df)[0])
         trend_data.append({'value': val, 'prediction': float(prediction)})
 
     return jsonify(trend_data)
