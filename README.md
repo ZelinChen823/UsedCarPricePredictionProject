@@ -42,7 +42,7 @@ VLT/
 1. **Clone the repo**  
 ```
 git clone https://github.com/ZelinChen823/UsedCarPricePredictionProject
-cd Car-Prices-Prediction/VLT
+cd UsedCarPricePredictionProject/
 ```
 2. **Create and activate venv using Python 3.12**
 ```
@@ -53,10 +53,11 @@ python -m venv .venv
 ```
 pip install -r requirements.txt
 ```
-4. **Model preparation**
+4. **Model preparation(Optional)**
 ```
 python hybrid_model.py
 ```
+This step is marked as optional since I already upload the trained model stored in _enhanced_model.joblib_. Run it if you want to see SHAP results.
 5. **Run the web app**
 ```
 python app.py
