@@ -44,3 +44,21 @@ VLT/
 git clone https://github.com/ZelinChen823/UsedCarPricePredictionProject
 cd Car-Prices-Prediction/VLT
 ```
+2. **Create and activate venv using Python 3.12**
+```
+python -m venv .venv
+.venv\Scripts\activate       # Windows
+```
+3. **Install dependencies**
+```
+pip install -r requirements.txt
+```
+4. **Model preparation**
+```
+python hybrid_model.py
+```
+5. **Run the web app**
+```
+python app.py
+```
+Navigate to http://127.0.0.1:5000 in your browser.
